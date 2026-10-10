@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OurSpace · Open our plan</title>
+<style>body{margin:0;background:#f5f2eb;color:#293d35;font:18px system-ui;display:grid;min-height:100vh;place-items:center}main{max-width:440px;margin:24px;padding:40px;background:white;border-radius:24px;box-shadow:0 12px 60px #293d3515}h1{font-size:40px;margin:0 0 20px}p{line-height:1.6}button,a{display:inline-block;border:0;border-radius:12px;padding:14px 20px;background:#293d35;color:white;font:inherit;text-decoration:none;cursor:pointer}[hidden]{display:none}</style></head>
+<body><main><h1>OurSpace</h1><p id="status" role="status">Finding our shared plan…</p><a id="open" hidden>Open OurSpace</a> <button id="retry" hidden>Try again</button><p>Bookmark this page. When the laptop is running, it connects you to our plan. Enter the shared passcode on the sign-in page.</p></main>
+<script>
+const status=document.querySelector('#status'),openLink=document.querySelector('#open'),retry=document.querySelector('#retry');
+async function connect(){
+  retry.hidden=true;openLink.hidden=true;status.textContent='Finding our shared plan…';
+  try{
+    const response=await fetch('https://raw.githubusercontent.com/brykimjh/ourspace-link/main/target.json?t='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
+    if(!response.ok)throw Error();
+    const target=await response.json();
+    if(!target.url){status.textContent='OurSpace is offline. Ask Bryant to start it, then try again.';retry.hidden=false;return;}
+    const url=new URL(target.url);
+    if(url.protocol!=='https:'||!/^[-a-z0-9]+\.trycloudflare\.com$/.test(url.hostname)||url.username||url.password||url.port||!['','/'].includes(url.pathname)||url.search||url.hash)throw Error();
+    openLink.href=url.href;openLink.hidden=false;status.textContent='Opening our shared plan… If it cannot connect, the laptop may be offline. Return here and try again after it restarts.';
+    location.replace(url.href);
+  }catch(error){status.textContent='Could not check the connection. Try again in a moment.';retry.hidden=false;}
+}
+retry.addEventListener('click',connect);connect();
+</script></body></html>
